@@ -12,7 +12,55 @@ Population::Population() {
     new_population.push_back({});
   }
   set_population(new_population);
-  population_history.push_back(population);
+}
+
+Population::Population(const Population &other) {
+  // Perform a deep copy
+  population = other.population;
+  mutation_count = other.mutation_count;
+  recombination_count = other.recombination_count;
+  mean_square_error = other.mean_square_error;
+  average_fitness = other.average_fitness;
+  best_gene = other.best_gene;
+}
+
+void Population::run() {
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_real_distribution<float> dis;
+  for (std::size_t i = 0; i < max_generations; ++i) {
+    auto parents = select_parents();
+    std::vector<Gene> next_gen{};
+    for (std::size_t j = 0; j < parents.size(); j += 2) {
+      if (i + 1 < parents.size()) {
+        if (recombination_probability >= dis(gen)) {
+          auto children = recombine({parents[i], parents[i + 1]});
+          next_gen.push_back(children.first);
+          next_gen.push_back(children.second);
+          ++recombination_count;
+        } else {
+          next_gen.push_back(parents[i]);
+          next_gen.push_back(parents[i + 1]);
+        }
+      }
+    }
+    for (auto &child : next_gen) {
+      if (mutation_probability >= dis(gen)) {
+        child = mutate(child);
+        ++mutation_count;
+      }
+    }
+    replace_population(next_gen);
+  }
+}
+
+void Population::printPopulationHistory() const {
+  std::cout << "Population count: " << population_history.size();
+  for (const auto &pop : population_history) {
+    std::cout << "Average fitness: " << pop.average_fitness << "\n";
+  }
+
 }
 
 void Population::set_population(std::vector<Gene> population) {
@@ -21,6 +69,7 @@ void Population::set_population(std::vector<Gene> population) {
   this->average_fitness = calculate_average_fitness();
   this->mean_square_error = calculate_average_error();
   this->best_gene = get_best_gene();
+  population_history.push_back(*this);
 }
 
 [[nodiscard]] Gene Population::get_best_gene() const {
@@ -31,32 +80,22 @@ void Population::set_population(std::vector<Gene> population) {
   return best;
 }
 
-void Population::replacePopulation(std::vector<Gene> children) {
-  std::sort(population.begin(), population.end(),
-            [](Gene const &first, Gene const &second) {
-              return first.get_fitness() < second.get_fitness();
-            });
+void Population::replace_population(std::vector<Gene> children) {
+  std::partial_sort(population.begin(), population.begin() + children.size(),
+                    population.end(),
+                    [](Gene const &first, Gene const &second) {
+                      return first.get_fitness() < second.get_fitness();
+                    });
 
-  for (std::size_t i = 0; i < children.size(); ++i) {
-    population[i] = children[i];
-  }
+  std::copy(children.begin(), children.end(), population.begin());
 
   set_population(population);
-}
-
-void Population::run() {
-  // - combine
-  // - mutate and crossover
-  // - create new population
-  // for (std::size_t i = 0; i <  max_generations; ++i) {
-  auto parents = select_parents();
-  //}
 }
 
 [[nodiscard]] std::vector<Gene> Population::select_parents() const {
   std::vector<Gene> parents{};
 
-  // create randomized indices for selection of random non-repeating pairs from
+  // Create randomized indices for selection of random non-repeating pairs from
   // the population vector
   std::vector<int> indices(population.size());
   std::iota(indices.begin(), indices.end(), 0);
@@ -65,13 +104,15 @@ void Population::run() {
   std::mt19937 g(rd());
   std::shuffle(indices.begin(), indices.end(), g);
 
-  for (int i = 0; i < population.size() - 1; i += 2) {
-    auto candidate_1 = population[indices[i]];
-    auto candidate_2 = population[indices[i + 1]];
-    auto parent = (candidate_1.get_fitness() > candidate_2.get_fitness())
-                      ? candidate_1
-                      : candidate_2;
-    parents.push_back(parent);
+  for (int i = 0; i < population.size(); i += 2) {
+    if (i + 1 < population.size()) {
+      auto candidate_1 = population[indices[i]];
+      auto candidate_2 = population[indices[i + 1]];
+      auto parent = (candidate_1.get_fitness() > candidate_2.get_fitness())
+                        ? candidate_1
+                        : candidate_2;
+      parents.push_back(parent);
+    }
   }
 
   return parents;

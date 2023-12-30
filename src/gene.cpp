@@ -1,4 +1,5 @@
 #include "gene.hpp"
+#include <algorithm>
 #include <cmath>
 #include <random>
 
@@ -39,13 +40,14 @@ Gene::chromosome_to_decimal(chromosome_array const &binary_array) const {
 }
 
 void Gene::calculate_fitness() {
-  int Cmin = 6;
-  fitness =
+  
+  fitness = 
       1.25 * std::pow(1 - phenotype_x, 2) *
           std::exp(-std::pow(phenotype_x, 2) - std::pow(phenotype_y + 1, 2)) -
       10 * (phenotype_x - std::pow(phenotype_x, 5) - std::pow(phenotype_y, 5)) *
           std::exp(
               -((std::pow(phenotype_x, 2) + std::pow(phenotype_y, 2)) / 0.9)) -
       (1.0 / 5) *
-          std::exp(-std::pow(phenotype_x + 1, 2) - std::pow(phenotype_y, 2)) + Cmin;
+          std::exp(-std::pow(phenotype_x + 1, 2) - std::pow(phenotype_y, 2));
+  fitness = std::max(0.0f, fitness );
 }
