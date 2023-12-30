@@ -9,5 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_executable(${PROJECT_NAME}  src/main.cpp
                                 src/gene.hpp
                                 src/gene.cpp
+                                src/population.cpp
+                                src/population.hpp
                                 )
 

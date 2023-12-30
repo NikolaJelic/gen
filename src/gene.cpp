@@ -1,6 +1,5 @@
 #include "gene.hpp"
 #include <cmath>
-#include <iostream>
 #include <random>
 
 [[nodiscard]] Gene::chromosome_array Gene::generate_random_chromosome() const {
@@ -36,11 +35,11 @@ Gene::chromosome_to_decimal(chromosome_array const &binary_array) const {
             decimalValue |= 1ULL << (size - 1 - i);
         }
     }
-    std::cout << decimalValue << std::endl;
     return decimalValue;
 }
 
 void Gene::calculate_fitness() {
+  int Cmin = 6;
   fitness =
       1.25 * std::pow(1 - phenotype_x, 2) *
           std::exp(-std::pow(phenotype_x, 2) - std::pow(phenotype_y + 1, 2)) -
@@ -48,5 +47,5 @@ void Gene::calculate_fitness() {
           std::exp(
               -((std::pow(phenotype_x, 2) + std::pow(phenotype_y, 2)) / 0.9)) -
       (1.0 / 5) *
-          std::exp(-std::pow(phenotype_x + 1, 2) - std::pow(phenotype_y, 2));
+          std::exp(-std::pow(phenotype_x + 1, 2) - std::pow(phenotype_y, 2)) + Cmin;
 }
