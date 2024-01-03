@@ -1,5 +1,6 @@
 #include "population.hpp"
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <numeric>
 #include <random>
@@ -30,7 +31,7 @@ void Population::run() {
   std::mt19937 gen(rd());
   std::uniform_real_distribution<float> dis;
   for (std::size_t i = 0; i < max_generations; ++i) {
-    auto parents = select_parents();
+    auto parents = select_parents_roulette();
     std::vector<Gene> next_gen{};
     for (std::size_t j = 0; j < parents.size(); j += 2) {
       if (i + 1 < parents.size()) {
@@ -55,12 +56,31 @@ void Population::run() {
   }
 }
 
-void Population::printPopulationHistory() const {
-  std::cout << "Population count: " << population_history.size();
-  for (const auto &pop : population_history) {
-    std::cout << "Average fitness: " << pop.average_fitness << "\n";
+void Population::print_statistics() const {
+  std::ofstream fitness_statistics("fitness_statistics.csv");
+  std::ofstream best_statistics("best_statistics.csv");
+  std::ofstream mutation_count_statistics("mutation_count_statistics.csv");
+  std::ofstream recombination_count_statistics(
+      "recombination_count_statistics.csv");
+  std::ofstream error_statistics("error_statistics.csv");
+  if (fitness_statistics.is_open() && best_statistics.is_open() &&
+      mutation_count_statistics.is_open() &&
+      recombination_count_statistics.is_open() && error_statistics.is_open()) {
+    for (std::size_t i = 0; i < population_history.size(); ++i) {
+      auto const &p = population_history[i];
+      fitness_statistics << i << "," << p.average_fitness << '\n';
+      best_statistics << i << "," << p.best_gene.get_fitness() << '\n';
+      mutation_count_statistics << i << "," << p.mutation_count << '\n';
+      recombination_count_statistics << i << "," << p.recombination_count
+                                     << '\n';
+      error_statistics << i << "," << p.mean_square_error << '\n';
+    }
+    fitness_statistics.close();
+    best_statistics.close();
+    mutation_count_statistics.close();
+    recombination_count_statistics.close();
+    error_statistics.close();
   }
-
 }
 
 void Population::set_population(std::vector<Gene> population) {
@@ -81,18 +101,19 @@ void Population::set_population(std::vector<Gene> population) {
 }
 
 void Population::replace_population(std::vector<Gene> children) {
-  std::partial_sort(population.begin(), population.begin() + children.size(),
-                    population.end(),
-                    [](Gene const &first, Gene const &second) {
-                      return first.get_fitness() < second.get_fitness();
-                    });
-
+  // Sort the population to be replaced
+  if (children.size() < population.size()) {
+    std::sort(population.begin(), population.end(),
+              [](const Gene &first, const Gene &second) {
+                return first.get_fitness() < second.get_fitness();
+              });
+  }
+  // Replace the worst individuals with the new children
   std::copy(children.begin(), children.end(), population.begin());
-
   set_population(population);
 }
 
-[[nodiscard]] std::vector<Gene> Population::select_parents() const {
+[[nodiscard]] std::vector<Gene> Population::select_parents_tournament() const {
   std::vector<Gene> parents{};
 
   // Create randomized indices for selection of random non-repeating pairs from
@@ -112,6 +133,55 @@ void Population::replace_population(std::vector<Gene> children) {
                         ? candidate_1
                         : candidate_2;
       parents.push_back(parent);
+    }
+  }
+
+  return parents;
+}
+
+[[nodiscard]] std::vector<Gene> Population::select_parents_roulette() const {
+  std::vector<Gene> parents;
+
+  // Calculate total fitness
+  float total_fitness = std::accumulate(
+      population.begin(), population.end(), 0.0f,
+      [](float sum, const Gene &gene) { return sum + gene.get_fitness(); });
+
+  if (total_fitness == 0.0f) {
+    // Handle division by zero or other appropriate error handling
+    return parents;
+  }
+
+  // Perform Roulette Wheel Selection
+  std::random_device rd;
+  std::mt19937 g{rd()};
+  std::uniform_real_distribution<float> dis(0.0f, total_fitness);
+
+  // Adjust the loop condition to ensure pairs of parents can be selected
+  for (size_t i = 0; i + 1 < population.size(); i += 2) {
+    float spin1 = dis(g);
+    float spin2 = dis(g);
+
+    auto accumulate_fitness = [](float sum, const Gene &gene) {
+      return sum + gene.get_fitness();
+    };
+
+    auto parent1 = std::find_if(population.begin(), population.end(),
+                                [spin1, acc = 0.0f](const Gene &gene) mutable {
+                                  acc += gene.get_fitness();
+                                  return acc >= spin1;
+                                });
+
+    // Adjust the range for searching parent2 to avoid out-of-bounds access
+    auto parent2 = std::find_if(parent1 + 1, population.end(),
+                                [spin2, acc = 0.0f](const Gene &gene) mutable {
+                                  acc += gene.get_fitness();
+                                  return acc >= spin2;
+                                });
+
+    if (parent2 != population.end()) {
+      parents.push_back(*parent1);
+      parents.push_back(*parent2);
     }
   }
 
@@ -175,7 +245,6 @@ Population::recombine(std::pair<Gene, Gene> const &parents) const {
 [[nodiscard]] float Population::calculate_average_error() const {
   float max = 6.251637526363513f;
   float sum = 0.0f;
-  // mean((f_max - fitness_values).^2);
   for (auto const &gene : population) {
     sum += pow(max - gene.get_fitness(), 2);
   }

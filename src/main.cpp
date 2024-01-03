@@ -3,7 +3,7 @@
 #include <iostream>
 
 int main() {
-    Population population{};
-    population.run();
-    population.printPopulationHistory();
+  Population population{};
+  population.run();
+  population.print_statistics();
 }
