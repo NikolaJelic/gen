@@ -1,10 +1,8 @@
 #pragma once
 
 #include "gene.hpp"
-#include <random>
 #include <utility>
 #include <vector>
-#include <random>
 #include <utility>
 #include <vector>
 
@@ -14,7 +12,7 @@ public:
   static constexpr std::size_t max_generations = 100;
   static constexpr std::size_t population_size = 1000;
   static constexpr float mutation_probability = 0.1f;
-  static constexpr float recombination_probability = 0.9f;
+  static constexpr float recombination_probability = 0.4f;
 
   void print_statistics() const;
   Population();

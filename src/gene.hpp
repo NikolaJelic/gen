@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <span>
 #include <utility>
 
 class Gene {
@@ -50,4 +51,6 @@ private:
   float phenotype_x{};
   float phenotype_y{};
   float fitness{};
+
+  
 };

@@ -1,6 +1,5 @@
 
 #include "population.hpp"
-#include <iostream>
 
 int main() {
   Population population{};

@@ -66,7 +66,7 @@ void Population::print_statistics() const {
   if (fitness_statistics.is_open() && best_statistics.is_open() &&
       mutation_count_statistics.is_open() &&
       recombination_count_statistics.is_open() && error_statistics.is_open()) {
-    for (std::size_t i = 0; i < population_history.size(); ++i) {
+    for (std::size_t i = 1; i < population_history.size(); ++i) {
       auto const &p = population_history[i];
       fitness_statistics << i << "," << p.average_fitness << '\n';
       best_statistics << i << "," << p.best_gene.get_fitness() << '\n';
@@ -84,12 +84,14 @@ void Population::print_statistics() const {
 }
 
 void Population::set_population(std::vector<Gene> population) {
+  population_history.push_back(*this);
   this->population = population;
   // calculate the statistics
   this->average_fitness = calculate_average_fitness();
   this->mean_square_error = calculate_average_error();
   this->best_gene = get_best_gene();
-  population_history.push_back(*this);
+  this->mutation_count = 0;
+  this->recombination_count = 0;
 }
 
 [[nodiscard]] Gene Population::get_best_gene() const {
