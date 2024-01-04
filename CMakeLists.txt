@@ -11,5 +11,7 @@ add_executable(${PROJECT_NAME}  src/main.cpp
                                 src/gene.cpp
                                 src/population.cpp
                                 src/population.hpp
+                                src/simulation.cpp
+                                src/simulation.hpp
                                 )
 

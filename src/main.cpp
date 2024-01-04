@@ -1,8 +1,8 @@
 
-#include "population.hpp"
+#include "simulation.hpp"
 
 int main() {
-  Population population{};
-  population.run();
-  population.print_statistics();
+Simulation simulation(100,0.1,0.4);
+simulation.run();
+simulation.print_statistics();
 }
