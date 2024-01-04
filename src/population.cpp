@@ -1,12 +1,13 @@
 #include "population.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <numeric>
 #include <random>
 #include <utility>
 #include <vector>
 
-Population::Population() {
+Population::Population(std::size_t population_size): population_size(population_size) {
   std::vector<Gene> new_population{};
   for (int i = 0; i < population_size; ++i) {
     new_population.push_back({});
@@ -14,8 +15,9 @@ Population::Population() {
   set_population(new_population);
 }
 
-Population::Population(std::vector<Gene> const &new_population) {
+Population::Population(std::vector<Gene> const &new_population): population_size(new_population.size()) {
   set_population(new_population);
+  
 }
 
 void Population::set_population(std::vector<Gene> population) {

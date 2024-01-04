@@ -8,9 +8,9 @@
 
 class Simulation {
 public:
-  Simulation(std::size_t max_gen, float mutation_probability,
+  Simulation(std::size_t max_gen, std::size_t population_size,  float mutation_probability,
              float recombination_probability)
-      : max_generations(max_gen), mutation_probability(mutation_probability),
+      : max_generations(max_gen), population_size(population_size), mutation_probability(mutation_probability),
         recombination_probability(recombination_probability) {
     for (auto const &p : current_population.get_population()) {
     }
@@ -21,7 +21,8 @@ public:
 
 private:
   std::vector<Population> history{};
-  Population current_population{};
+  const std::size_t population_size;
+  Population current_population{population_size};
   const std::size_t max_generations;
   const float mutation_probability;
   const float recombination_probability;
