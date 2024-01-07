@@ -7,7 +7,8 @@
 #include <utility>
 #include <vector>
 
-Population::Population(std::size_t population_size): population_size(population_size) {
+Population::Population(std::size_t population_size)
+    : population_size(population_size), engine(std::random_device{}()) {
   std::vector<Gene> new_population{};
   for (int i = 0; i < population_size; ++i) {
     new_population.push_back({});
@@ -15,9 +16,9 @@ Population::Population(std::size_t population_size): population_size(population_
   set_population(new_population);
 }
 
-Population::Population(std::vector<Gene> const &new_population): population_size(new_population.size()) {
+Population::Population(std::vector<Gene> const &new_population)
+    : population_size(new_population.size()), engine(std::random_device{}()) {
   set_population(new_population);
-  
 }
 
 void Population::set_population(std::vector<Gene> population) {
@@ -64,7 +65,7 @@ Gene Population::get_best_gene() const {
   return parents;
 } */
 
-std::vector<Gene> Population::select_parents_roulette() const {
+std::vector<Gene> Population::select_parents_roulette() {
   std::vector<Gene> parents;
 
   // Calculate total fitness
@@ -78,13 +79,12 @@ std::vector<Gene> Population::select_parents_roulette() const {
   }
 
   // Perform Roulette Wheel Selection
-  std::random_device rd;
-  std::mt19937 g{rd()};
-  std::uniform_real_distribution<float> dis(0.0f, total_fitness);
+
+  std::uniform_real_distribution<float> distribution(0.0f, total_fitness);
 
   // Adjust the loop condition to ensure pairs of parents can be selected
   for (size_t i = 0; i < population.size(); ++i) {
-    float spin = dis(g);
+    float spin = distribution(engine);
 
     auto accumulate_fitness = [](float sum, const Gene &gene) {
       return sum + gene.get_fitness();
@@ -102,8 +102,7 @@ std::vector<Gene> Population::select_parents_roulette() const {
 }
 std::pair<Gene, Gene>
 Population::recombine(std::pair<Gene, Gene> const &parents) {
-  std::random_device rd;
-  std::default_random_engine engine(rd());
+
   std::uniform_int_distribution<int> distribution(1, parents.first.gene_length);
   std::size_t pivot = distribution(engine);
 
@@ -127,8 +126,6 @@ Population::recombine(std::pair<Gene, Gene> const &parents) {
 }
 
 Gene Population::mutate(Gene const &gene) {
-  std::random_device rd;
-  std::default_random_engine engine(rd());
   std::uniform_int_distribution<int> distribution(0, 1);
   Gene::chromosome_array ch_x = gene.get_chromosomes().first;
   Gene::chromosome_array ch_y = gene.get_chromosomes().second;

@@ -1,13 +1,11 @@
+
 #include "gene.hpp"
 #include <algorithm>
 #include <cmath>
-#include <random>
 
-Gene::chromosome_array Gene::generate_random_chromosome() const {
+Gene::chromosome_array Gene::generate_random_chromosome()  {
   chromosome_array ret{};
-  std::random_device rd;
-  std::default_random_engine engine(rd());
-  std::uniform_int_distribution<int> distribution(0, 1);
+  std::uniform_int_distribution<std::size_t> distribution(0, 1);
   for (int &c : ret) {
     c = distribution(engine);
   }
@@ -41,7 +39,6 @@ Gene::chromosome_to_decimal(chromosome_array const &binary_array) const {
 }
 
 void Gene::calculate_fitness() {
-
   fitness =
       1.25 * std::pow(1 - phenotype_x, 2) *
           std::exp(-std::pow(phenotype_x, 2) - std::pow(phenotype_y + 1, 2)) -

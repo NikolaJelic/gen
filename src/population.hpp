@@ -17,13 +17,13 @@ public:
     return std::span<Gene>(population);
   }
 
-  [[nodiscard]] static std::pair<Gene, Gene>
+  [[nodiscard]] std::pair<Gene, Gene>
   recombine(std::pair<Gene, Gene> const &parents);
-  [[nodiscard]] static Gene mutate(Gene const &gene);
+  [[nodiscard]] Gene mutate(Gene const &gene);
   /// Uses the binary tournament selection for choosing parents
   [[nodiscard]] std::vector<Gene> select_parents_tournament() const;
   /// Uses a roulette wheel for choosing parents
-  [[nodiscard]] std::vector<Gene> select_parents_roulette() const;
+  [[nodiscard]] std::vector<Gene> select_parents_roulette();
   [[nodiscard]] float calculate_average_fitness() const;
   [[nodiscard]] float calculate_average_error() const;
   [[nodiscard]] Gene get_best_gene() const;
@@ -48,6 +48,8 @@ private:
   std::size_t population_size;
   // population tracking
   std::vector<Gene> population{};
+
+  std::default_random_engine engine;
 
   // statistics
   std::size_t mutation_count{};

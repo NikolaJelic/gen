@@ -2,6 +2,7 @@
 
 #include <array>
 #include <utility>
+#include <random>
 
 class Gene {
 public:
@@ -13,33 +14,34 @@ public:
 
   using chromosome_array = std::array<int, gene_length>;
 
-  Gene(){
-   chromosome_x =  generate_random_chromosome();
+  Gene() : engine(std::random_device{}()) {
+   chromosome_x = generate_random_chromosome();
    chromosome_y = generate_random_chromosome();
    set_phenotypes();
    calculate_fitness();
   }
 
-  Gene(chromosome_array ch_x, chromosome_array ch_y): chromosome_x(ch_x), chromosome_y(ch_y){
+  Gene(chromosome_array ch_x, chromosome_array ch_y) : chromosome_x(ch_x), chromosome_y(ch_y), engine(std::random_device{}()) {
     set_phenotypes();
     calculate_fitness();
   }
 
-  [[nodiscard]] std::pair<chromosome_array, chromosome_array> get_chromosomes() const{
-    return {chromosome_x, chromosome_y} ;
+  [[nodiscard]] std::pair<chromosome_array, chromosome_array> get_chromosomes() const {
+    return {chromosome_x, chromosome_y};
   }
 
-   [[nodiscard]] std::pair<float, float> get_phenotype() const{
+  [[nodiscard]] std::pair<float, float> get_phenotype() const {
     return {phenotype_x, phenotype_y};
   }
 
-  [[nodiscard]] float get_fitness() const{
+  [[nodiscard]] float get_fitness() const {
     return fitness;
   }
 
 private:
+  std::default_random_engine engine;
 
-  [[nodiscard]] chromosome_array generate_random_chromosome() const;
+  [[nodiscard]] chromosome_array generate_random_chromosome();
   void set_phenotypes();  
   [[nodiscard]] float calculate_phenotype(float value, float min, float max) const;
   void calculate_fitness();
@@ -50,6 +52,4 @@ private:
   float phenotype_x{};
   float phenotype_y{};
   float fitness{};
-
-  
 };
